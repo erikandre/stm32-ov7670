@@ -47,12 +47,12 @@
 #define SCCB_REG_ADDR 			0x01
 
 // OV7670 camera settings
-#define OV7670_REG_NUM 			121
+#define OV7670_REG_NUM 			3
 #define OV7670_WRITE_ADDR 	0x42
 
 // Image settings
-#define IMG_ROWS   					176
-#define IMG_COLUMNS   			144
+#define IMG_ROWS   					144
+#define IMG_COLUMNS   			174
 
 // Image buffer
 extern volatile uint16_t frame_buffer[IMG_ROWS*IMG_COLUMNS];

@@ -70,8 +70,76 @@ void USART_Print(char *s) {
 	}
 }
 
+void Serial_sendHexByte_half(uint8_t val) {
+	char c = 'Q'; // Just in case
+	switch (val) {
+	case 0:
+		c = '0';
+		break;
+	case 1:
+		c = '1';
+		break;
+	case 2:
+		c = '2';
+		break;
+	case 3:
+		c = '3';
+		break;
+	case 4:
+		c = '4';
+		break;
+	case 5:
+		c = '5';
+		break;
+	case 6:
+		c = '6';
+		break;
+	case 7:
+		c = '7';
+		break;
+	case 8:
+		c = '8';
+		break;
+	case 9:
+		c = '9';
+		break;
+	case 0xa:
+		c = 'a';
+		break;
+	case 0xb:
+		c = 'b';
+		break;
+	case 0xc:
+		c = 'c';
+		break;
+	case 0xd:
+		c = 'd';
+		break;
+	case 0xe:
+		c = 'e';
+		break;
+	case 0xf:
+		c = 'f';
+		break;
+	}
+	while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
+		; // Wait for Empty
+	USART_SendData(USART2, c); // Send Char
+}
+
+void Serial_sendHexByte(uint8_t val) {
+	Serial_sendHexByte_half(val >> 4);
+	Serial_sendHexByte_half(val & 0xf);
+}
+
 void Serial_logi(int val) {
-	char buffer [10];
+	char buffer[10];
 	itoa(val, buffer, 10);
+	USART_Print(&buffer);
+}
+
+void Serial_logih(int val) {
+	char buffer[10];
+	itoa(val, buffer, 16);
 	USART_Print(&buffer);
 }

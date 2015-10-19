@@ -28,10 +28,27 @@
 #include <stdbool.h>
 #include "usart.h"
 
-static volatile uint8_t STM_mode = 0;
-static volatile bool btn_pressed = false;
-static volatile bool sett_mode = true;
 static volatile bool frame_flag = false;
+static volatile int state = 0;
+
+volatile uint8_t temp_buffer[IMG_ROWS * IMG_COLUMNS];
+
+void dumpFrame(void) {
+
+	uint8_t *buffer = (uint8_t *) frame_buffer;
+	int length = IMG_ROWS * IMG_COLUMNS * 2;
+	int i;
+	for (i = 1; i < length; i += 2) {
+		temp_buffer[i / 2] = buffer[i];
+		//Serial_sendHexByte(buffer[i]);
+	}
+	USART_Print("QQQQ");
+	for (i = 0; i < (length / 2); i++) {
+		Serial_sendHexByte(temp_buffer[i]);
+	}
+	USART_Print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+	USART_Print("Now for something different\r\n");
+}
 
 int main(void) {
 	bool err;
@@ -51,11 +68,6 @@ int main(void) {
 
 	USART_Print("Starting OV7670 Demo\r\n");
 
-//	long delay = 100000000;
-//	while (delay) {
-//		delay--;
-//	}
-
 	// OV7670 configuration
 	err = OV7670_init();
 
@@ -65,93 +77,54 @@ int main(void) {
 		}
 	} else {
 		USART_Print("Successfully initialized\r\n");
-		//TODO Print success message
 	}
 
-	// Infinite program loop
+//	DCMI_CaptureCmd(ENABLE);
+
+// Infinite program loop
 	while (1) {
-//		if (btn_pressed == true) {
-//			if (STM_mode == 0) {
-//				// MODE 1 - RUN
-//				STM_mode = 1;
-//				STM_LedOff(LED_RED);
-//				STM_LedOn(LED_GREEN);
-//
-//				DCMI_CaptureCmd(ENABLE);
-//			} else {
-//				if (frame_flag == false) {
-//					// MODE 2 - STOP
-//					STM_mode = 0;
-//					STM_LedOff(LED_GREEN);
-//					STM_LedOn(LED_RED);
-//
-//					DCMI_CaptureCmd(DISABLE);
-//				}
-//			}
-//			btn_pressed = false;
-//		}
-
 		if (frame_flag == true) {
-			// TODO Transfer photo
-//			LCD_ILI9341_Rotate(LCD_ILI9341_Orientation_Landscape_1);
-//			LCD_ILI9341_DisplayImage((uint16_t*) frame_buffer);
-
 			frame_flag = false;
+			dumpFrame();
+//			DCMI_Cmd(ENABLE);
+		} else if (state != 0) {
+			USART_Print("Interrupt=");
+			Serial_logi(state);
+			USART_Print("\r\n");
+			state = 0;
 		}
 	}
 }
-
-//void TIM3_IRQHandler(void) {
-//	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
-//		static uint8_t old_state = 0xFF;
-//		uint8_t new_state = STM_ButtonPressed();
-//
-//		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-//
-//		// Button state
-//		if (new_state > old_state) {
-//			if (STM_mode == 0) {
-//				TIM_Cmd(TIM4, ENABLE);
-//			}
-//			sett_mode = false;
-//		}
-//		if (sett_mode == false) {
-//			if (new_state < old_state) {
-//				btn_pressed = true;
-//				if (STM_mode == 0)
-//					TIM_Cmd(TIM4, DISABLE);
-//			}
-//		}
-//		old_state = new_state;
-//	}
-//}
-//
-//void TIM4_IRQHandler(void) {
-//	if (TIM_GetITStatus(TIM4, TIM_IT_Update) != RESET) {
-//		static bool init = false;
-//
-//		TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
-//
-//		if (init == true) {
-//			// MODE 3 - SETTINGS
-//			TIM_Cmd(TIM4, DISABLE);
-//
-//			sett_mode = true;
-//			STM_mode = 3;
-//			STM_LedOn(LED_GREEN);
-//			STM_LedOn(LED_RED);
-//		} else {
-//			init = true;
-//		}
-//	}
-//}
 
 void DMA2_Stream1_IRQHandler(void) {
 	// DMA complete
 	if (DMA_GetITStatus(DMA2_Stream1, DMA_IT_TCIF1) != RESET) {
 		DMA_ClearITPendingBit(DMA2_Stream1, DMA_IT_TCIF1);
 
-		DMA_Cmd(DMA2_Stream1, ENABLE);
+		//DMA_Cmd(DMA2_Stream1, ENABLE);
 		frame_flag = true;
+		state = 1;
+//		DCMI_Cmd(DISABLE);
+	} else if (DMA_GetITStatus(DMA2_Stream1, DMA_IT_TEIF1) != RESET) {
+		state = 2;
+		DMA_ClearITPendingBit(DMA2_Stream1, DMA_IT_TEIF1);
+		//DMA_Cmd(DMA2_Stream1, ENABLE);
 	}
+}
+
+void DCMI_IRQHandler(void) {
+	if (DCMI_GetFlagStatus(DCMI_FLAG_FRAMERI) == SET) {
+		state = 3;
+//		frame_flag = true;
+		DCMI_ClearFlag(DCMI_FLAG_FRAMERI);
+	}
+	if (DCMI_GetFlagStatus(DCMI_FLAG_OVFRI) == SET) {
+		state = 4;
+		DCMI_ClearFlag(DCMI_FLAG_OVFRI);
+	}
+	if (DCMI_GetFlagStatus(DCMI_FLAG_ERRRI) == SET) {
+		state = 5;
+		DCMI_ClearFlag(DCMI_FLAG_ERRRI);
+	}
+
 }

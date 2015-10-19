@@ -18,4 +18,6 @@ void USART_Print(char *s);
 
 void Serial_logi(int val);
 
+void Serial_sendHexByte(uint8_t val);
+
 #endif /* USART_H_ */
