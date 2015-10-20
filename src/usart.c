@@ -28,6 +28,7 @@ void USART_GPIO_Config(void) {
 
 void USART_Initialize(void) {
 	USART_InitTypeDef USART_InitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
 
 	/* USARTx configuration ------------------------------------------------------*/
 	/* USARTx configured as follow:
@@ -38,16 +39,20 @@ void USART_Initialize(void) {
 	 - Hardware flow control disabled (RTS and CTS signals)
 	 - Receive and transmit enabled
 	 */
-	USART_InitStructure.USART_BaudRate = 115200;
+	USART_InitStructure.USART_BaudRate = 230400;//230400;//921600;//115200;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
-	USART_InitStructure.USART_HardwareFlowControl =
-	USART_HardwareFlowControl_None;
-
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-
 	USART_Init(USART2, &USART_InitStructure);
+	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+
+	NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
 
 	USART_Cmd(USART2, ENABLE);
 }
@@ -62,12 +67,12 @@ void USART_RCC_Config(void) {
 }
 
 void USART_Print(char *s) {
-	while (*s) {
-		while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
-			; // Wait for Empty
-
-		USART_SendData(USART2, *s++); // Send Char
-	}
+//	while (*s) {
+//		while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
+//			; // Wait for Empty
+//
+//		USART_SendData(USART2, *s++); // Send Char
+//	}
 }
 
 void Serial_sendHexByte_half(uint8_t val) {
@@ -128,8 +133,12 @@ void Serial_sendHexByte_half(uint8_t val) {
 }
 
 void Serial_sendHexByte(uint8_t val) {
-	Serial_sendHexByte_half(val >> 4);
-	Serial_sendHexByte_half(val & 0xf);
+//	Serial_sendHexByte_half(val >> 4);
+//	Serial_sendHexByte_half(val & 0xf);
+}
+
+char Serial_readChar(void) {
+	return USART_ReceiveData(USART2);
 }
 
 void Serial_logi(int val) {

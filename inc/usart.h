@@ -20,4 +20,6 @@ void Serial_logi(int val);
 
 void Serial_sendHexByte(uint8_t val);
 
+char Serial_readChar(void);
+
 #endif /* USART_H_ */

@@ -400,7 +400,7 @@ void DCMI_DMA_init(void) {
 
 	// DCMI config
 	DCMI_DeInit();
-	DCMI_InitStructure.DCMI_CaptureMode = DCMI_CaptureMode_Continuous; //DCMI_CaptureMode_SnapShot
+	DCMI_InitStructure.DCMI_CaptureMode = DCMI_CaptureMode_SnapShot; //DCMI_CaptureMode_SnapShot
 	DCMI_InitStructure.DCMI_ExtendedDataMode = DCMI_ExtendedDataMode_8b;
 	DCMI_InitStructure.DCMI_CaptureRate = DCMI_CaptureRate_All_Frame; //DCMI_CaptureRate_All_Frame;
 	DCMI_InitStructure.DCMI_PCKPolarity = DCMI_PCKPolarity_Rising;
@@ -423,9 +423,9 @@ void DCMI_DMA_init(void) {
 	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
-	DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;
 	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_Full;
 	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
@@ -435,8 +435,8 @@ void DCMI_DMA_init(void) {
 
 	/* DMA2 IRQ channel Configuration */
 	NVIC_InitStructure.NVIC_IRQChannel = DMA2_Stream1_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 

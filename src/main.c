@@ -29,6 +29,7 @@
 #include "usart.h"
 
 static volatile bool frame_flag = false;
+static volatile bool send_sync_frame = false;
 static volatile int state = 0;
 
 volatile uint8_t temp_buffer[IMG_ROWS * IMG_COLUMNS];
@@ -40,14 +41,39 @@ void dumpFrame(void) {
 	int i;
 	for (i = 1; i < length; i += 2) {
 		temp_buffer[i / 2] = buffer[i];
-		//Serial_sendHexByte(buffer[i]);
 	}
-	USART_Print("QQQQ");
+//	USART_Print("QQQQ");
+//	for (i = 0; i < (length / 2); i++) {
+//		Serial_sendHexByte(temp_buffer[i]);
+//	}
+//	USART_Print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+//	USART_Print("Now for something different\r\n");
+//	for (i = 0; i < 100; i++) {
+//		while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
+//					; // Wait for Empty
+//				USART_SendData(USART2, 0xff);
+//	}
+	if (send_sync_frame) {
+		for (i = 0x7f; i > 0; i--) {
+			while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
+				; // Wait for Empty
+			USART_SendData(USART2, i);
+		}
+		send_sync_frame = false;
+	}
+
 	for (i = 0; i < (length / 2); i++) {
-		Serial_sendHexByte(temp_buffer[i]);
+		while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
+			; // Wait for Empty
+		if (i > 100) {
+			USART_SendData(USART2, temp_buffer[i]);
+		} else {
+			USART_SendData(USART2, 0xff);
+		}
 	}
-	USART_Print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-	USART_Print("Now for something different\r\n");
+	DMA_Cmd(DMA2_Stream1, ENABLE);
+	DCMI_Cmd(ENABLE);
+	DCMI_CaptureCmd(ENABLE);
 }
 
 int main(void) {
@@ -55,9 +81,6 @@ int main(void) {
 
 	// System init
 	SystemInit();
-//	STM_LedInit();
-//	STM_ButtonInit();
-//	STM_TimerInit();
 	USART_RCC_Config();
 	MCO1_init();
 	SCCB_init();
@@ -79,14 +102,11 @@ int main(void) {
 		USART_Print("Successfully initialized\r\n");
 	}
 
-//	DCMI_CaptureCmd(ENABLE);
-
-// Infinite program loop
+	// Infinite program loop
 	while (1) {
 		if (frame_flag == true) {
 			frame_flag = false;
 			dumpFrame();
-//			DCMI_Cmd(ENABLE);
 		} else if (state != 0) {
 			USART_Print("Interrupt=");
 			Serial_logi(state);
@@ -100,23 +120,22 @@ void DMA2_Stream1_IRQHandler(void) {
 	// DMA complete
 	if (DMA_GetITStatus(DMA2_Stream1, DMA_IT_TCIF1) != RESET) {
 		DMA_ClearITPendingBit(DMA2_Stream1, DMA_IT_TCIF1);
-
-		//DMA_Cmd(DMA2_Stream1, ENABLE);
 		frame_flag = true;
 		state = 1;
-//		DCMI_Cmd(DISABLE);
 	} else if (DMA_GetITStatus(DMA2_Stream1, DMA_IT_TEIF1) != RESET) {
 		state = 2;
 		DMA_ClearITPendingBit(DMA2_Stream1, DMA_IT_TEIF1);
-		//DMA_Cmd(DMA2_Stream1, ENABLE);
 	}
 }
 
 void DCMI_IRQHandler(void) {
 	if (DCMI_GetFlagStatus(DCMI_FLAG_FRAMERI) == SET) {
 		state = 3;
-//		frame_flag = true;
 		DCMI_ClearFlag(DCMI_FLAG_FRAMERI);
+
+		DMA_Cmd(DMA2_Stream1, DISABLE);
+		DCMI_Cmd(DISABLE);
+		DCMI_CaptureCmd(DISABLE);
 	}
 	if (DCMI_GetFlagStatus(DCMI_FLAG_OVFRI) == SET) {
 		state = 4;
@@ -126,5 +145,12 @@ void DCMI_IRQHandler(void) {
 		state = 5;
 		DCMI_ClearFlag(DCMI_FLAG_ERRRI);
 	}
+}
+
+void USART2_IRQHandler(void) {
+//	if (Serial_readChar() == 'S') {
+	send_sync_frame = true;
+//	}
+	USART_ClearFlag(USART2, USART_FLAG_RXNE);
 
 }
