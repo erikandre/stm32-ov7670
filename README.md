@@ -2,6 +2,8 @@
 
 Demonstration of interfacing the Nucleo STM32F446RE with a OV7670 camera module.
 
+![Screenshot](camera.png)
+
 ## Building
 
 To build the project you will also need to set up an Eclipse (OpenSTM32) workspace containing the stdperiph library. Except from this there are no external dependencies.
