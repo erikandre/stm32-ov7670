@@ -8,18 +8,36 @@
 #ifndef USART_H_
 #define USART_H_
 
-void USART_RCC_Config(void);
+void Serial_init(void);
 
-void USART_GPIO_Config(void);
+/**
+ * Log a null terminated string
+ */
+void Serial_log(char *s);
 
-void USART_Initialize(void);
-
-void USART_Print(char *s);
-
+/*
+ * Log an integer (as a string)
+ */
 void Serial_logi(int val);
 
-void Serial_sendHexByte(uint8_t val);
+/*
+ * Log an integer (as a hex string)
+ */
+void Serial_logih(int val);
 
-char Serial_readChar(void);
+/**
+ * Log a byte (as a hex string)
+ */
+void Serial_log_hexb(uint8_t val);
+
+/**
+ * Send a raw byte
+ */
+void Serial_sendb(uint8_t *val);
+
+/**
+ * Read a byte
+ */
+uint8_t Serial_read(void);
 
 #endif /* USART_H_ */

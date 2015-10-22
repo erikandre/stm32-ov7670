@@ -3,6 +3,8 @@
  *   OV7670_control.c
  *   (c) 2014, Petr Machala
  *
+ *   Updated by Erik Andre, 2015
+ *
  *   Description:
  *   OV7670 camera configuration and control file.
  *   Optimized for 32F429IDISCOVERY board.
@@ -39,9 +41,9 @@
 // Image buffer
 volatile uint16_t frame_buffer[IMG_ROWS * IMG_COLUMNS];
 
-const uint8_t OV7670_reg[OV7670_REG_NUM][2] = { { 0x12, 0x80 },	//Reset registers
+const uint8_t OV7670_reg[OV7670_REG_NUM][2] = { { 0x12, 0x80 },
 
-		// Image format
+// Image format
 		{ 0x12, 0x8 },		// 0x14 = QVGA size, RGB mode; 0x8 = QCIF, YUV, 0xc = QCIF (RGB)
 		{ 0xc, 0x8 }, //
 		{ 0x11, 0b1000000 }, //
@@ -63,7 +65,7 @@ const uint8_t OV7670_reg[OV7670_REG_NUM][2] = { { 0x12, 0x80 },	//Reset register
 		{ 0x72, 0x11 },		//DCW_SCALING
 		{ 0x73, 0xf0 },		//PCLK_DIV_SCALING
 		{ 0xa2, 0x02 },		//PCLK_DELAY_SCALING
-		//17
+
 		// Matrix coefficients
 		{ 0x4f, 0x80 }, //
 		{ 0x50, 0x80 }, //
@@ -72,7 +74,7 @@ const uint8_t OV7670_reg[OV7670_REG_NUM][2] = { { 0x12, 0x80 },	//Reset register
 		{ 0x53, 0x5e }, //
 		{ 0x54, 0x80 }, //
 		{ 0x58, 0x9e },
-		//24
+
 		// Gamma curve values
 		{ 0x7a, 0x20 }, //
 		{ 0x7b, 0x10 }, //
@@ -90,7 +92,7 @@ const uint8_t OV7670_reg[OV7670_REG_NUM][2] = { { 0x12, 0x80 },	//Reset register
 		{ 0x87, 0xc4 }, //
 		{ 0x88, 0xd7 }, //
 		{ 0x89, 0xe8 },
-		// 40
+
 		// AGC and AEC parameters
 		{ 0xa5, 0x05 }, //
 		{ 0xab, 0x07 }, //
@@ -106,7 +108,7 @@ const uint8_t OV7670_reg[OV7670_REG_NUM][2] = { { 0x12, 0x80 },	//Reset register
 		{ 0xa9, 0x90 }, //
 		{ 0xaa, 0x94 }, //
 		{ 0x10, 0x00 },
-		//54
+
 		// AWB parameters
 		{ 0x43, 0x0a }, //
 		{ 0x44, 0xf0 }, //
@@ -128,7 +130,7 @@ const uint8_t OV7670_reg[OV7670_REG_NUM][2] = { { 0x12, 0x80 },	//Reset register
 		{ 0x01, 0x40 }, //
 		{ 0x02, 0x60 }, //
 		{ 0x13, 0xe7 },
-		// 74
+
 		// Additional parameters
 		{ 0x34, 0x11 }, //
 		{ 0x3f, 0x00 }, //
@@ -189,7 +191,6 @@ void MCO1_init(void) {
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	RCC_ClockSecuritySystemCmd(ENABLE);
-
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
 	// GPIO config
@@ -204,7 +205,7 @@ void MCO1_init(void) {
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource8, GPIO_AF_MCO);
 
 	// MCO clock source
-//	RCC_MCO1Config(RCC_MCO1Source_PLLCLK, RCC_MCO1Div_4);
+//	RCC_MCO1Config(RCC_MCO1Source_PLLCLK, RCC_MCO1Div_4); // Using the fast PLL clock results in garbage output, using HSI (at 16Mhz works fine)
 	RCC_MCO1Config(RCC_MCO1Source_HSI, RCC_MCO1Div_1);
 }
 
@@ -248,16 +249,12 @@ void SCCB_init(void) {
 	I2C_Cmd(I2C2, ENABLE);
 }
 
-//bool SCCB_write_reg2(uint8_t reg_addr, uint8_t data) {
-//	return SCCB_write_reg(reg_addr, &data);
-//}
-
 bool SCCB_write_reg(uint8_t reg_addr, uint8_t* data) {
 	uint32_t timeout = 0x7FFFFF;
 
 	while (I2C_GetFlagStatus(I2C2, I2C_FLAG_BUSY)) {
 		if ((timeout--) == 0) {
-			USART_Print("Busy Timeout\r\n");
+			Serial_log("Busy Timeout\r\n");
 			return true;
 		}
 	}
@@ -267,7 +264,7 @@ bool SCCB_write_reg(uint8_t reg_addr, uint8_t* data) {
 
 	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_MODE_SELECT)) {
 		if ((timeout--) == 0) {
-			USART_Print("Start bit Timeout\r\n");
+			Serial_log("Start bit Timeout\r\n");
 			return true;
 		}
 	}
@@ -277,7 +274,7 @@ bool SCCB_write_reg(uint8_t reg_addr, uint8_t* data) {
 
 	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) {
 		if ((timeout--) == 0) {
-			USART_Print("Slave address timeout\r\n");
+			Serial_log("Slave address timeout\r\n");
 			return true;
 		}
 	}
@@ -287,7 +284,7 @@ bool SCCB_write_reg(uint8_t reg_addr, uint8_t* data) {
 
 	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) {
 		if ((timeout--) == 0) {
-			USART_Print("Register timeout\r\n");
+			Serial_log("Register timeout\r\n");
 			return true;
 		}
 	}
@@ -297,7 +294,7 @@ bool SCCB_write_reg(uint8_t reg_addr, uint8_t* data) {
 
 	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) {
 		if ((timeout--) == 0) {
-			USART_Print("Value timeout\r\n");
+			Serial_log("Value timeout\r\n");
 			return true;
 		}
 	}
@@ -307,19 +304,6 @@ bool SCCB_write_reg(uint8_t reg_addr, uint8_t* data) {
 	return false;
 }
 
-//bool OV7670_init(void) {
-//
-//	SCCB_write_reg2(0x12, 0x0); // reset
-//	Delay(0xFFFF);
-//
-//	SCCB_write_reg2(0x12, 0x80); // output format to qcif
-//	Delay(0xFFFF);
-//
-//	SCCB_write_reg2(0x12, 0x80); // output format to qcif
-//	Delay(0xFFFF);
-//
-//	return false;
-//}
 
 bool OV7670_init(void) {
 	uint8_t data, i = 0;
@@ -329,12 +313,12 @@ bool OV7670_init(void) {
 	for (i = 0; i < OV7670_REG_NUM; i++) {
 		data = OV7670_reg[i][1];
 		err = SCCB_write_reg(OV7670_reg[i][0], &data);
-		USART_Print("Writing register: ");
+		Serial_log("Writing register: ");
 		Serial_logi(i);
-		USART_Print("\r\n");
+		Serial_log("\r\n");
 
 		if (err == true) {
-			USART_Print("Failed to update register\r\n");
+			Serial_log("Failed to update register\r\n");
 			break;
 		}
 
