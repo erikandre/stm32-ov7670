@@ -8,7 +8,11 @@ Demonstration of interfacing the Nucleo STM32F446RE with a OV7670 camera module.
 
 To build the project you will also need to set up an Eclipse (OpenSTM32) workspace containing the stdperiph library. Except from this there are no external dependencies.
 
-#Running it
+##Running it
 
 After building and flashing the resulting elf file using openocd you can connect to the serial port of the device.
 Frames are continuously sent over the serial connection as they are captured by the camera.
+
+##Credits
+
+This project contains lots of code written by other (very awesome) developers. I will try to put together a list with links to where you can find more information ASAP.
