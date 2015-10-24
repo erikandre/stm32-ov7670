@@ -13,6 +13,12 @@ To build the project you will also need to set up an Eclipse (OpenSTM32) workspa
 After building and flashing the resulting elf file using openocd you can connect to the serial port of the device.
 Frames are continuously sent over the serial connection as they are captured by the camera.
 
+To see the camera output you can use the SerialCamera.jar, found under the tools directory:
+
+```
+java -jar tools/SerialCamera.jar
+```
+
 ## Pinout
 
 Since the STM32F's peripherals (Camera interface, I2C, etc) are only available on certain pins, it is important to use the correct ones.
