@@ -15,4 +15,8 @@ Frames are continuously sent over the serial connection as they are captured by 
 
 ##Credits
 
-This project contains lots of code written by other (very awesome) developers. I will try to put together a list with links to where you can find more information ASAP.
+This project contains lots of code written by other (very awesome) developers.
+
+* [http://supuntharanga.blogspot.co.uk/2014/04/stm32f4-discovery-board-ov7660-or.html](http://supuntharanga.blogspot.co.uk/2014/04/stm32f4-discovery-board-ov7660-or.html)
+* [http://embeddedprogrammer.blogspot.co.uk/2012/07/hacking-ov7670-camera-module-sccb-cheat.html](http://embeddedprogrammer.blogspot.co.uk/2012/07/hacking-ov7670-camera-module-sccb-cheat.html)
+* [http://www.urel.feec.vutbr.cz/MPOA/2014/cam-ov7670](http://www.urel.feec.vutbr.cz/MPOA/2014/cam-ov7670)
