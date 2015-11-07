@@ -67,30 +67,33 @@ void dumpFrame(void) {
 }
 
 int main(void) {
-	bool err;
+//	bool err;
 
 	SystemInit();
 	MCO1_init();
 	SCCB_init();
-	DCMI_DMA_init();
+
+//	DCMI_DMA_init();
 	Serial_init();
 
-	// Initialize camera over SCCB
-	err = OV7670_init();
+	OV9655_init();
 
-	if (err == true) {
-		Serial_log("Failed to initialize\r\n");
-		while (1) {
-		}
-	}
-
-	// Infinite program loop
-	while (1) {
-		if (frame_flag == true) {
-			frame_flag = false;
-			dumpFrame();
-		}
-	}
+//	// Initialize camera over SCCB
+//	err = OV7670_init();
+//
+//	if (err == true) {
+//		Serial_log("Failed to initialize\r\n");
+//		while (1) {
+//		}
+//	}
+//
+//	// Infinite program loop
+//	while (1) {
+//		if (frame_flag == true) {
+//			frame_flag = false;
+//			dumpFrame();
+//		}
+//	}
 }
 
 void DMA2_Stream1_IRQHandler(void) {

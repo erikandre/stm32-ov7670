@@ -30,7 +30,7 @@ void Serial_init(void) {
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_USART2);
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource3, GPIO_AF_USART2);
 
-	USART_InitStructure.USART_BaudRate = 230400; //230400 works fine for me but 115200 might be a safer option
+	USART_InitStructure.USART_BaudRate = 115200; //230400 works fine for me but 115200 might be a safer option
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;

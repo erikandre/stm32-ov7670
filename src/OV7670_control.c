@@ -197,124 +197,124 @@ void MCO1_init(void) {
 	RCC_MCO1Config(RCC_MCO1Source_HSI, RCC_MCO1Div_1);
 }
 
-void SCCB_init(void) {
-	GPIO_InitTypeDef GPIO_InitStructure;
-	I2C_InitTypeDef I2C_InitStructure;
+//void SCCB_init(void) {
+//	GPIO_InitTypeDef GPIO_InitStructure;
+//	I2C_InitTypeDef I2C_InitStructure;
+//
+//	RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, ENABLE);
+//	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+//	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+//
+//	// GPIO config
+//	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+//	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+//	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+//	GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
+//	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+//	GPIO_Init(GPIOB, &GPIO_InitStructure);
+//
+//	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
+//	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+//	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+//	GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
+//	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+//	GPIO_Init(GPIOC, &GPIO_InitStructure);
+//
+//	// GPIO AF config
+//	GPIO_PinAFConfig(GPIOB, GPIO_PinSource10, GPIO_AF_I2C2);
+//	GPIO_PinAFConfig(GPIOC, GPIO_PinSource12, GPIO_AF_I2C2);
+//
+//	// I2C config
+//	I2C_DeInit(I2C2);
+//	I2C_InitStructure.I2C_Mode = I2C_Mode_I2C;
+//	I2C_InitStructure.I2C_DutyCycle = I2C_DutyCycle_2;
+//	I2C_InitStructure.I2C_OwnAddress1 = 0x00;
+//	I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
+//	I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
+//	I2C_InitStructure.I2C_ClockSpeed = 100000;
+//	I2C_ITConfig(I2C2, I2C_IT_ERR, ENABLE);
+//	I2C_Init(I2C2, &I2C_InitStructure);
+//	I2C_Cmd(I2C2, ENABLE);
+//}
 
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, ENABLE);
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
-
-	// GPIO config
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
-
-	// GPIO AF config
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource10, GPIO_AF_I2C2);
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource12, GPIO_AF_I2C2);
-
-	// I2C config
-	I2C_DeInit(I2C2);
-	I2C_InitStructure.I2C_Mode = I2C_Mode_I2C;
-	I2C_InitStructure.I2C_DutyCycle = I2C_DutyCycle_2;
-	I2C_InitStructure.I2C_OwnAddress1 = 0x00;
-	I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
-	I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
-	I2C_InitStructure.I2C_ClockSpeed = 100000;
-	I2C_ITConfig(I2C2, I2C_IT_ERR, ENABLE);
-	I2C_Init(I2C2, &I2C_InitStructure);
-	I2C_Cmd(I2C2, ENABLE);
-}
-
-bool SCCB_write_reg(uint8_t reg_addr, uint8_t* data) {
-	uint32_t timeout = 0x7FFFFF;
-
-	while (I2C_GetFlagStatus(I2C2, I2C_FLAG_BUSY)) {
-		if ((timeout--) == 0) {
-			Serial_log("Busy Timeout\r\n");
-			return true;
-		}
-	}
-
-	// Send start bit
-	I2C_GenerateSTART(I2C2, ENABLE);
-
-	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_MODE_SELECT)) {
-		if ((timeout--) == 0) {
-			Serial_log("Start bit Timeout\r\n");
-			return true;
-		}
-	}
-
-	// Send slave address (camera write address)
-	I2C_Send7bitAddress(I2C2, OV7670_WRITE_ADDR, I2C_Direction_Transmitter);
-
-	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) {
-		if ((timeout--) == 0) {
-			Serial_log("Slave address timeout\r\n");
-			return true;
-		}
-	}
-
-	// Send register address
-	I2C_SendData(I2C2, reg_addr);
-
-	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) {
-		if ((timeout--) == 0) {
-			Serial_log("Register timeout\r\n");
-			return true;
-		}
-	}
-
-	// Send new register value
-	I2C_SendData(I2C2, *data);
-
-	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) {
-		if ((timeout--) == 0) {
-			Serial_log("Value timeout\r\n");
-			return true;
-		}
-	}
-
-	// Send stop bit
-	I2C_GenerateSTOP(I2C2, ENABLE);
-	return false;
-}
+//bool SCCB_write_reg(uint8_t reg_addr, uint8_t* data) {
+//	uint32_t timeout = 0x7FFFFF;
+//
+//	while (I2C_GetFlagStatus(I2C2, I2C_FLAG_BUSY)) {
+//		if ((timeout--) == 0) {
+//			Serial_log("Busy Timeout\r\n");
+//			return true;
+//		}
+//	}
+//
+//	// Send start bit
+//	I2C_GenerateSTART(I2C2, ENABLE);
+//
+//	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_MODE_SELECT)) {
+//		if ((timeout--) == 0) {
+//			Serial_log("Start bit Timeout\r\n");
+//			return true;
+//		}
+//	}
+//
+//	// Send slave address (camera write address)
+//	I2C_Send7bitAddress(I2C2, OV7670_WRITE_ADDR, I2C_Direction_Transmitter);
+//
+//	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)) {
+//		if ((timeout--) == 0) {
+//			Serial_log("Slave address timeout\r\n");
+//			return true;
+//		}
+//	}
+//
+//	// Send register address
+//	I2C_SendData(I2C2, reg_addr);
+//
+//	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) {
+//		if ((timeout--) == 0) {
+//			Serial_log("Register timeout\r\n");
+//			return true;
+//		}
+//	}
+//
+//	// Send new register value
+//	I2C_SendData(I2C2, *data);
+//
+//	while (!I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED)) {
+//		if ((timeout--) == 0) {
+//			Serial_log("Value timeout\r\n");
+//			return true;
+//		}
+//	}
+//
+//	// Send stop bit
+//	I2C_GenerateSTOP(I2C2, ENABLE);
+//	return false;
+//}
 
 
-bool OV7670_init(void) {
-	uint8_t data, i = 0;
-	bool err;
-
-	// Configure camera registers
-	for (i = 0; i < OV7670_REG_NUM; i++) {
-		data = OV7670_reg[i][1];
-		err = SCCB_write_reg(OV7670_reg[i][0], &data);
-		Serial_log("Writing register: ");
-		Serial_logi(i);
-		Serial_log("\r\n");
-
-		if (err == true) {
-			Serial_log("Failed to update register\r\n");
-			break;
-		}
-
-		Delay(0xFFFF);
-	}
-
-	return err;
-}
+//bool OV7670_init(void) {
+//	uint8_t data, i = 0;
+//	bool err;
+//
+//	// Configure camera registers
+//	for (i = 0; i < OV7670_REG_NUM; i++) {
+//		data = OV7670_reg[i][1];
+//		err = SCCB_write_reg(OV7670_reg[i][0], &data);
+//		Serial_log("Writing register: ");
+//		Serial_logi(i);
+//		Serial_log("\r\n");
+//
+//		if (err == true) {
+//			Serial_log("Failed to update register\r\n");
+//			break;
+//		}
+//
+//		Delay(0xFFFF);
+//	}
+//
+//	return err;
+//}
 
 void DCMI_DMA_init(void) {
 	GPIO_InitTypeDef GPIO_InitStructure;
